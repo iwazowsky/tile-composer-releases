@@ -1,0 +1,9 @@
+{
+  "version": "1.0.0",
+  "tag": "v1.0.0",
+  "published": "2026-11-25T13:09:40Z",
+  "files": {
+    "mac": { "name": "Tile-Composer-mac.dmg", "size": 13137291, "sha256": "26f069ed009803a6bce1c596aa8ba2dce6b453015c0cfa0ddf0a752a7555fd2d" },
+    "windows": { "name": "Tile-Composer-windows-setup.exe", "size": 5041639, "sha256": "1857bc774437a7535515056ab778900dec522ff1086943f8f2191bc0b6e00eec" }
+  }
+}

@@ -35,6 +35,36 @@ jobs:
               --latest
           fi
 
+      # latest.json on the main branch is what the website's download page reads:
+      # the newest version, its date, and each file's size and SHA-256.
+      - name: Record the newest release
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME#incoming-}"
+          mac_sha="$(sha256sum Tile-Composer-mac.dmg | cut -d' ' -f1)"
+          win_sha="$(sha256sum Tile-Composer-windows-setup.exe | cut -d' ' -f1)"
+          mac_size="$(stat -c %s Tile-Composer-mac.dmg)"
+          win_size="$(stat -c %s Tile-Composer-windows-setup.exe)"
+          published="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          git fetch --depth 1 origin main
+          git switch --detach FETCH_HEAD
+          cat > latest.json <<JSON
+          {
+            "version": "${tag#v}",
+            "tag": "$tag",
+            "published": "$published",
+            "files": {
+              "mac": { "name": "Tile-Composer-mac.dmg", "size": $mac_size, "sha256": "$mac_sha" },
+              "windows": { "name": "Tile-Composer-windows-setup.exe", "size": $win_size, "sha256": "$win_sha" }
+            }
+          }
+          JSON
+          git add latest.json
+          git -c user.name="github-actions[bot]" \
+            -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "Newest release: $tag"
+          git push origin HEAD:main
+
       - name: Remove the incoming branch
         if: always()
         run: git push origin --delete "$GITHUB_REF_NAME"
