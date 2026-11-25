@@ -1,0 +1,40 @@
+# Turns a branch "incoming-vX.Y.Z" (pushed by the app's build with the two
+# installers in it) into the Release vX.Y.Z, then deletes the branch so the
+# files never enter this repository's history.
+name: Publish a release
+
+on:
+  push:
+    branches: ["incoming-v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Publish
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME#incoming-}"
+          files=(Tile-Composer-mac.dmg Tile-Composer-windows-setup.exe)
+          for f in "${files[@]}"; do test -s "$f"; done
+          if gh release view "$tag" > /dev/null 2>&1; then
+            gh release upload "$tag" "${files[@]}" --clobber
+          else
+            gh release create "$tag" "${files[@]}" \
+              --target main \
+              --title "Tile Composer ${tag#v}" \
+              --notes-file RELEASE-NOTES.md \
+              --latest
+          fi
+
+      - name: Remove the incoming branch
+        if: always()
+        run: git push origin --delete "$GITHUB_REF_NAME"
